@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>淘工厂流程图</title>
+    <title>淘工厂流程图 - 交互式动画</title>
     <style>
         body {
             font-family: 'Microsoft YaHei', sans-serif;
@@ -56,12 +56,17 @@
             border-radius: 8px;
             border-left: 4px solid #9370DB;
             box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            cursor: pointer;
+        }
+        .policy-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 15px rgba(0,0,0,0.1);
         }
         .policy-card h3 {
             margin-top: 0;
             color: #333;
         }
-        /* 移除Mermaid相关样式，使用简单的容器样式 */
         #flowchart-container {
             background-color: white;
             padding: 30px;
@@ -69,6 +74,7 @@
             box-shadow: 0 4px 6px rgba(0,0,0,0.1);
             margin: 0 auto;
             width: 100%;
+            position: relative;
         }
         .flow-title {
             text-align: center;
@@ -78,6 +84,23 @@
             font-weight: 600;
             padding-bottom: 10px;
             border-bottom: 2px solid #f0f0f0;
+            position: relative;
+            overflow: hidden;
+        }
+        .flow-title::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: -100%;
+            width: 100%;
+            height: 2px;
+            background: linear-gradient(90deg, transparent, #9370DB, transparent);
+            animation: flow-line 3s ease infinite;
+        }
+        @keyframes flow-line {
+            0% { left: -100%; }
+            50% { left: 100%; }
+            100% { left: 100%; }
         }
         #loading {
             position: fixed;
@@ -85,7 +108,269 @@
             left: 50%;
             transform: translate(-50%, -50%);
             display: none;
+            z-index: 100;
+            background-color: rgba(255,255,255,0.8);
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+            animation: pulse 1.5s infinite;
         }
+        @keyframes pulse {
+            0% { transform: translate(-50%, -50%) scale(1); }
+            50% { transform: translate(-50%, -50%) scale(1.05); }
+            100% { transform: translate(-50%, -50%) scale(1); }
+        }
+        .error-message {
+            display: none;
+            text-align: center;
+            color: #ff4d4f;
+            margin: 20px 0;
+            font-size: 1.2rem;
+            padding: 15px;
+            border: 1px solid #ffccc7;
+            border-radius: 8px;
+            background-color: #fff2f0;
+        }
+        
+        /* SVG交互样式 */
+        .loading-animation {
+            text-align: center;
+            padding: 20px;
+            font-size: 1.2rem;
+            color: #666;
+        }
+        
+        .loading-dots {
+            display: inline-block;
+            min-width: 30px;
+        }
+        
+        #tooltip {
+            position: absolute;
+            display: none;
+            background: white;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            padding: 10px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+            z-index: 1000;
+            max-width: 250px;
+            font-size: 14px;
+            transform: translate(-50%, -100%);
+        }
+        
+        #node-details {
+            display: none;
+            background: white;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            padding: 20px;
+            margin-top: 20px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+        
+        #node-details h3 {
+            margin-top: 0;
+            color: #4169E1;
+            border-bottom: 2px solid #f0f0f0;
+            padding-bottom: 10px;
+        }
+        
+        #node-details ul {
+            list-style: none;
+            padding: 0;
+            margin: 15px 0 0 0;
+        }
+        
+        #node-details li {
+            padding: 8px 0;
+            border-bottom: 1px solid #f5f5f5;
+        }
+        
+        #node-details li:last-child {
+            border-bottom: none;
+        }
+        
+        .node-highlight {
+            filter: drop-shadow(0 0 8px rgba(65, 105, 225, 0.6));
+            transform: scale(1.1);
+            transition: all 0.3s ease;
+        }
+        .app-screenshot {
+            position: relative;
+            max-width: 400px;
+            margin: 20px auto;
+            transition: transform 0.5s ease;
+            cursor: pointer;
+        }
+        .app-screenshot:hover {
+            transform: scale(1.05);
+        }
+        .app-screenshot::after {
+            content: '点击放大';
+            position: absolute;
+            bottom: 10px;
+            right: 10px;
+            background-color: rgba(0,0,0,0.6);
+            color: white;
+            padding: 5px 10px;
+            border-radius: 4px;
+            font-size: 0.8rem;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+        .app-screenshot:hover::after {
+            opacity: 1;
+        }
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0,0,0,0.8);
+            z-index: 1000;
+            justify-content: center;
+            align-items: center;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+        .modal.active {
+            display: flex;
+            opacity: 1;
+        }
+        .modal-content {
+            max-width: 90%;
+            max-height: 90%;
+            position: relative;
+        }
+        .modal-close {
+            position: absolute;
+            top: -40px;
+            right: 0;
+            color: white;
+            font-size: 30px;
+            cursor: pointer;
+        }
+        .highlight-section {
+            position: relative;
+            overflow: hidden;
+        }
+        .highlight-section::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(147, 112, 219, 0.2), transparent);
+            animation: highlight-sweep 3s ease infinite;
+            pointer-events: none;
+        }
+        @keyframes highlight-sweep {
+            0% { left: -100%; }
+            50% { left: 100%; }
+            100% { left: 100%; }
+        }
+        /* SVG交互样式 */
+        .node-highlight {
+            transform: scale(1.1);
+            filter: drop-shadow(0 0 5px rgba(65, 105, 225, 0.7));
+            transition: all 0.3s ease;
+        }
+        .path-highlight {
+            stroke-width: 4px;
+            filter: drop-shadow(0 0 3px rgba(65, 105, 225, 0.5));
+        }
+        .path-animation {
+            stroke-dasharray: 10;
+            animation: dash 20s linear infinite;
+        }
+        @keyframes dash {
+            to {
+                stroke-dashoffset: 1000;
+            }
+        }
+        .node-active {
+            transform: scale(1.15);
+            filter: drop-shadow(0 0 8px rgba(65, 105, 225, 0.9));
+        }
+        .detail-btn:hover {
+            background-color: #3a5fc8;
+        }
+        .close-details:hover {
+            color: #4169E1;
+        }
+        
+        /* 动画序列效果 */
+        .flow-sequence-animation .node,
+        .flow-sequence-animation .flow-path,
+        .flow-sequence-animation text[for] {
+            opacity: 0.3;
+            transition: all 0.5s ease;
+        }
+        
+        .flow-sequence-animation .active-node {
+            opacity: 1;
+            transform: scale(1.1);
+            filter: drop-shadow(0 0 10px rgba(65, 105, 225, 0.8));
+            transition: all 0.5s ease;
+        }
+        
+        .flow-sequence-animation .active-path {
+            opacity: 1;
+            stroke-width: 5px;
+            filter: drop-shadow(0 0 5px rgba(65, 105, 225, 0.6));
+            stroke-dasharray: 10;
+            animation: dash 20s linear infinite;
+        }
+        
+        .flow-sequence-animation text.active-text {
+            opacity: 1;
+            font-weight: bold;
+            fill: #4169E1 !important;
+        }
+        
+        /* 控制面板 */
+        .flow-controls {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            margin: 20px 0;
+            gap: 10px;
+        }
+        
+        .flow-controls button {
+            background-color: #4169E1;
+            color: white;
+            border: none;
+            padding: 8px 15px;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        
+        .flow-controls button:hover {
+            background-color: #3a5fc8;
+            transform: translateY(-2px);
+        }
+        
+        .flow-controls button:disabled {
+            background-color: #cccccc;
+            cursor: not-allowed;
+            transform: none;
+        }
+        
+        .step-indicator {
+            padding: 5px 10px;
+            border-radius: 5px;
+            background-color: #f0f0f0;
+            font-weight: bold;
+            min-width: 60px;
+            text-align: center;
+        }
+        
         @media (max-width: 768px) {
             .policy-cards {
                 flex-direction: column;
@@ -93,50 +378,915 @@
             .policy-card {
                 min-width: auto;
             }
+            #node-details {
+                width: 80%;
+                max-width: 300px;
+            }
+        }
+        
+        /* 节点动画和效果 */
+        .node {
+            transition: all 0.5s ease;
+            cursor: pointer;
+        }
+        
+        .node:hover {
+            transform: scale(1.05);
+            filter: drop-shadow(0 0 8px rgba(65, 105, 225, 0.6));
+        }
+        
+        .node-highlight {
+            transform: scale(1.1);
+            filter: drop-shadow(0 0 10px rgba(65, 105, 225, 0.8));
+        }
+        
+        .node-active {
+            transform: scale(1.1);
+            filter: drop-shadow(0 0 12px rgba(65, 105, 225, 0.9));
+        }
+
+        /* 路径动画 */
+        .path-animation {
+            stroke-dasharray: 10;
+            animation: dash 30s linear infinite;
+        }
+        
+        @keyframes dash {
+            to {
+                stroke-dashoffset: -1000;
+            }
+        }
+        
+        .path-highlight {
+            stroke-width: 5px;
+            filter: drop-shadow(0 0 3px rgba(65, 105, 225, 0.5));
         }
     </style>
 </head>
 <body>
-    <div id="loading">加载中...</div>
+    <div id="loading">加载中<span class="loading-dots">...</span></div>
     <div class="container">
-        <div class="intro">
-            <h1>淘工厂 - 工厂直连消费者(M2C)模式</h1>
+        <div class="intro highlight-section">
             <p>淘工厂是阿里巴巴旗下的一种以工厂直连消费者为核心的电商平台，其模式通常被称为M2C（Manufacturer-to-Consumer）。通过减少中间环节，平台直接对接工厂和消费者，从而实现降本增效。</p>
             
             <div class="policy-container">
                 <h2>佣金扶持政策</h2>
                 <div class="policy-cards">
-                    <div class="policy-card">
+                    <div class="policy-card" id="policy1">
                         <h3>💰 冷启动阶段低佣金</h3>
                         <p>新品在上架初期（60天内、7天日均订单不足100单）仅收取0.6%的固定佣金，相比传统11%左右的佣金，优惠幅度最高可达95%。</p>
                     </div>
-                    <div class="policy-card">
+                    <div class="policy-card" id="policy2">
                         <h3>🔄 后续订单优惠折扣</h3>
                         <p>冷启动期结束后，普通商品还可享受类目佣金折扣，最高优惠可达50%，进一步压缩销售成本。</p>
                     </div>
-                    <div class="policy-card">
+                    <div class="policy-card" id="policy3">
                         <h3>📈 降低定价压力与提升利润</h3>
                         <p>由于佣金支出减少，商家在定价时可以更有竞争力，同时保留更多利润空间，提高整体运营效率和市场竞争力。</p>
                     </div>
                 </div>
             </div>
         </div>
-        <h2 class="flow-title">淘工厂业务流程全景图</h2>
-<!-- 使用静态SVG图表代替Mermaid动态渲染 -->
-<div id="flowchart-container">
-    <img src="graph.svg" alt="淘工厂业务流程全景图" style="width:100%; max-width:1200px; margin:0 auto; display:block;">
-</div>
 
-<!-- 已移除备用SVG图表，因为我们已经直接使用静态SVG -->
+        <div class="highlight-section">
+            <div id="flowchart-container">
+                <h2 class="flow-title">淘工厂业务流程全景图</h2>
+                <div class="flow-controls">
+                    <button id="play-btn">▶️ 播放流程</button>
+                    <button id="reset-btn">🔄 重置</button>
+                    <button id="prev-btn" disabled>◀️ 上一步</button>
+                    <span class="step-indicator">0/7</span>
+                    <button id="next-btn">▶️ 下一步</button>
+                </div>
+                <div id="svg-container" style="width:100%; max-width:1200px; margin:0 auto; position:relative;">
+                    <!-- SVG将通过JavaScript加载 -->
+                </div>
+                <div id="tooltip" style="display:none; position:absolute; background-color:white; padding:10px; border-radius:5px; box-shadow:0 2px 8px rgba(0,0,0,0.2); z-index:100; max-width:300px; font-size:14px;"></div>
+                <div id="node-details" style="display:none; position:absolute; background-color:white; padding:15px; border-radius:8px; box-shadow:0 4px 12px rgba(0,0,0,0.15); z-index:101; width:300px; font-size:14px;">
+                    <span class="close-details" style="position:absolute; right:10px; top:5px; cursor:pointer; font-size:18px;">&times;</span>
+                    <h3 style="margin-top:0; color:#4169E1;"></h3>
+                    <p></p>
+                    <div class="detail-actions" style="margin-top:10px;">
+                        <button class="detail-btn" style="background-color:#4169E1; color:white; border:none; padding:5px 10px; border-radius:4px; cursor:pointer;">了解更多</button>
+                    </div>
+                </div>
+                <div id="step-description" style="margin-top:20px; padding:20px; background-color:#f8f9fa; border-radius:12px; text-align:left; display:none; box-shadow: 0 4px 12px rgba(0,0,0,0.1); border-left: 5px solid #4169E1;">
+                    <h3 style="margin-top:0; color:#4169E1; font-size: 20px; border-bottom: 1px solid #e0e0e0; padding-bottom: 10px;">流程步骤详解</h3>
+                    <p style="font-size:16px; line-height: 1.6; color: #333;"></p>
+                </div>
+                <div id="svg-error" class="error-message">
+                    图表加载失败。请确保graph.svg文件存在并且可访问。
+                </div>
+            </div>
+        </div>
 
-<!-- 移除Mermaid检测脚本，因为我们已经使用静态SVG -->
-
-        <h2 class="flow-title">淘工厂APP界面展示</h2>
-        <div class="intro">
+        <div class="intro highlight-section">
+            <h2 class="flow-title">淘工厂APP界面展示</h2>
             <div style="display: flex; flex-direction: column; align-items: center;">
-                <img src="3326ac26358e1b4514ac9ac95f742b9.jpg" alt="淘工厂APP界面" style="max-width: 400px; margin: 20px 0;">
+                <div class="app-screenshot" id="appScreenshot">
+                    <img src="3326ac26358e1b4514ac9ac95f742b9.jpg" alt="淘工厂APP界面" style="max-width: 100%; border-radius: 8px; box-shadow: 0 4px 10px rgba(0,0,0,0.15);">
+                </div>
                 <p style="text-align: center; max-width: 600px;">上图展示了淘工厂APP的实际用户界面，包含了商品分类、优惠活动和商品展示等核心功能。通过APP，消费者可以直接浏览和购买工厂直供的优质低价商品，享受平台提供的各种优惠政策。</p>
             </div>
         </div>
-</body>
-</html>
+        
+        <footer style="text-align: center; margin-top: 50px; padding: 20px; border-top: 1px solid #eee;">
+            <p>© 2023 淘工厂流程图项目 | <a href="https://github.com/xl76888/taofactory" target="_blank" style="color: #4169E1; text-decoration: none;">GitHub 仓库</a></p>
+        </footer>
+    </div>
+
+    <!-- 图片查看模态框 -->
+    <div class="modal" id="imageModal">
+        <div class="modal-content">
+            <span class="modal-close" id="closeModal">&times;</span>
+            <img id="modalImage" src="" alt="放大图片" style="max-width: 100%; max-height: 90vh;">
+        </div>
+    </div>
+
+    <script>
+        // 页面加载动画
+        document.addEventListener('DOMContentLoaded', function() {
+            const loading = document.getElementById('loading');
+            loading.style.display = 'block';
+            
+            // 加载SVG
+            loadInteractiveSVG();
+            
+            // 模拟加载过程
+            setTimeout(function() {
+                loading.style.display = 'none';
+                
+                // 添加入场动画
+                const sections = document.querySelectorAll('.intro, #flowchart-container');
+                sections.forEach((section, index) => {
+                    setTimeout(() => {
+                        section.style.opacity = '0';
+                        section.style.transform = 'translateY(20px)';
+                        section.style.transition = 'opacity 0.5s ease, transform 0.5s ease';
+                        
+                        setTimeout(() => {
+                            section.style.opacity = '1';
+                            section.style.transform = 'translateY(0)';
+                        }, 100);
+                    }, index * 200);
+                });                
+                // 设置关闭按钮事件
+                setupCloseDetailsHandler();
+            }, 1000);
+            
+            // 加载中动画
+            const loadingDots = document.querySelector('.loading-dots');
+            let dotCount = 3;
+            setInterval(() => {
+                dotCount = (dotCount % 3) + 1;
+                loadingDots.textContent = '.'.repeat(dotCount);
+            }, 500);
+        });
+        
+        // 添加流程动画控制
+        function setupFlowAnimation(svgDoc) {
+            // 流程步骤定义
+            const flowSteps = [
+                {
+                    step: 1,
+                    nodes: ['factory-node'],
+                    paths: ['path-factory-to-platform'],
+                    texts: ['text-factory-to-platform'],
+                    description: '【产品上架】工厂将生产的商品信息上传至淘工厂平台，包括商品图片、详细描述、规格参数、价格和库存等信息。系统会自动审核并分类归档。'
+                },
+                {
+                    step: 2,
+                    nodes: ['factory-node', 'platform-node'],
+                    paths: ['path-factory-to-platform', 'path-platform-to-consumer'],
+                    texts: ['text-factory-to-platform', 'text-platform-to-consumer'],
+                    description: '【商品展示】淘工厂平台对商品进行审核和优化展示，消费者可以在平台APP或网站上浏览各类产品，查看详情、评价和参数对比。商品信息包含工厂直供标识，突显价格优势。'
+                },
+                {
+                    step: 3,
+                    nodes: ['platform-node', 'consumer-node'],
+                    paths: ['path-platform-to-consumer', 'path-consumer-to-platform'],
+                    texts: ['text-platform-to-consumer', 'text-consumer-to-platform'],
+                    description: '【下单购买】消费者选择心仪的商品，确认规格、数量后加入购物车并提交订单。平台会自动校验库存，生成订单编号，并等待付款确认。'
+                },
+                {
+                    step: 4,
+                    nodes: ['platform-node', 'consumer-node', 'payment-node'],
+                    paths: ['path-consumer-to-platform', 'path-platform-to-payment'],
+                    texts: ['text-consumer-to-platform', 'text-platform-to-payment'],
+                    description: '【支付处理】订单提交后，平台引导消费者通过支付宝、微信支付等多种方式完成支付流程。支付系统验证交易安全，确认支付成功后通知平台，资金暂由平台托管。'
+                },
+                {
+                    step: 5,
+                    nodes: ['platform-node', 'payment-node', 'factory-node'],
+                    paths: ['path-platform-to-payment', 'path-platform-to-factory'],
+                    texts: ['text-platform-to-payment', 'text-platform-to-factory'],
+                    description: '【订单通知】支付完成后，平台将订单详细信息（包括收货地址、联系方式、商品规格、数量等）实时通知给工厂管理系统，工厂确认订单并开始备货。'
+                },
+                {
+                    step: 6,
+                    nodes: ['factory-node', 'logistics-node'],
+                    paths: ['path-platform-to-factory', 'path-factory-to-logistics'],
+                    texts: ['text-platform-to-factory', 'text-factory-to-logistics'],
+                    description: '【商品发货】工厂根据订单信息挑选、包装商品，生成物流面单，并交付给合作物流服务商进行配送。工厂同时更新订单状态，录入物流单号，消费者可实时查看物流信息。'
+                },
+                {
+                    step: 7,
+                    nodes: ['logistics-node', 'consumer-node'],
+                    paths: ['path-factory-to-logistics', 'path-logistics-to-consumer'],
+                    texts: ['text-factory-to-logistics', 'text-logistics-to-consumer'],
+                    description: '【配送到家】物流服务商通过全国配送网络将商品送达消费者手中。消费者签收商品，确认收货后平台将货款（扣除平台佣金）转给工厂，交易流程完成。如有退换货需求，可在平台发起售后服务。'
+                }
+            ];
+            
+            let currentStep = 0;
+            const totalSteps = flowSteps.length;
+            
+            // 获取控制按钮
+            const playBtn = document.getElementById('play-btn');
+            const resetBtn = document.getElementById('reset-btn');
+            const prevBtn = document.getElementById('prev-btn');
+            const nextBtn = document.getElementById('next-btn');
+            const stepIndicator = document.querySelector('.step-indicator');
+            const stepDescription = document.getElementById('step-description');
+            
+            // 添加流程序列动画类
+            svgDoc.classList.add('flow-sequence-animation');
+            
+            // 重置流程
+            function resetFlow() {
+                currentStep = 0;
+                stepIndicator.textContent = `${currentStep}/${totalSteps}`;
+                prevBtn.disabled = true;
+                nextBtn.disabled = false;
+                
+                // 重置所有节点和路径
+                const allNodes = svgDoc.querySelectorAll('.node');
+                const allPaths = svgDoc.querySelectorAll('.flow-path');
+                const allTexts = svgDoc.querySelectorAll('text[for]');
+                
+                allNodes.forEach(node => {
+                    node.classList.remove('active-node');
+                });
+                
+                allPaths.forEach(path => {
+                    path.classList.remove('active-path');
+                });
+                
+                allTexts.forEach(text => {
+                    text.classList.remove('active-text');
+                });
+                
+                stepDescription.style.display = 'none';
+            }
+            
+            // 显示指定步骤
+            function showStep(step) {
+                // 重置所有节点和路径
+                resetFlow();
+                
+                // 依次激活到当前步骤的所有节点和路径
+                for (let i = 0; i <= step; i++) {
+                    const flowStep = flowSteps[i];
+                    
+                    // 激活节点
+                    flowStep.nodes.forEach(nodeId => {
+                        const node = svgDoc.querySelector(`#${nodeId}`);
+                        if (node) node.classList.add('active-node');
+                    });
+                    
+                    // 激活路径
+                    flowStep.paths.forEach(pathId => {
+                        const path = svgDoc.querySelector(`#${pathId}`);
+                        if (path) path.classList.add('active-path');
+                    });
+                    
+                    // 激活文本
+                    flowStep.texts.forEach(textId => {
+                        const text = svgDoc.querySelector(`#${textId}`);
+                        if (text) text.classList.add('active-text');
+                    });
+                }
+                
+                // 更新步骤指示器
+                currentStep = step;
+                stepIndicator.textContent = `${currentStep}/${totalSteps}`;
+                
+                // 更新按钮状态
+                prevBtn.disabled = currentStep === 0;
+                nextBtn.disabled = currentStep === totalSteps;
+                
+                // 显示当前步骤描述
+                if (currentStep > 0) {
+                    const description = flowSteps[currentStep - 1].description;
+                    stepDescription.querySelector('p').textContent = description;
+                    stepDescription.style.display = 'block';
+                } else {
+                    stepDescription.style.display = 'none';
+                }
+            }
+            
+            // 下一步
+            function nextStep() {
+                if (currentStep < totalSteps) {
+                    currentStep++;
+                    showStep(currentStep);
+                }
+            }
+            
+            // 上一步
+            function prevStep() {
+                if (currentStep > 0) {
+                    currentStep--;
+                    showStep(currentStep);
+                }
+            }
+            
+            // 自动播放
+            let playInterval;
+            function playFlow() {
+                // 如果已经在播放，则停止
+                if (playInterval) {
+                    clearInterval(playInterval);
+                    playInterval = null;
+                    playBtn.textContent = '▶️ 播放流程';
+                    return;
+                }
+                
+                // 开始播放
+                resetFlow();
+                playBtn.textContent = '⏸️ 暂停播放';
+                
+                nextStep(); // 立即显示第一步
+                
+                playInterval = setInterval(() => {
+                    if (currentStep >= totalSteps) {
+                        clearInterval(playInterval);
+                        playInterval = null;
+                        playBtn.textContent = '▶️ 播放流程';
+                    } else {
+                        nextStep();
+                    }
+                }, 3000); // 每3秒切换到下一步
+            }
+            
+            // 添加按钮事件监听
+            playBtn.addEventListener('click', playFlow);
+            resetBtn.addEventListener('click', resetFlow);
+            prevBtn.addEventListener('click', prevStep);
+            nextBtn.addEventListener('click', nextStep);
+            
+            // 初始化流程动画
+            resetFlow();
+        }
+        
+        // 加载交互式SVG
+        function loadInteractiveSVG() {
+            const svgContainer = document.getElementById('svg-container');
+            const tooltip = document.getElementById('tooltip');
+            const nodeDetails = document.getElementById('node-details');
+            const svgError = document.getElementById('svg-error');
+            
+            // 显示加载中状态
+            svgContainer.innerHTML = '<div class="loading-animation">加载中<span class="loading-dots">...</span></div>';
+            
+            try {
+                // 创建内联SVG内容而不是加载外部文件
+                svgContainer.innerHTML = `
+                <?xml version="1.0" encoding="UTF-8"?>
+                <svg xmlns="http://www.w3.org/2000/svg" width="1200" height="800" viewBox="0 0 1200 800">
+                  <!-- 背景 -->
+                  <rect width="100%" height="100%" fill="#ffffff"/>
+                  
+                  <!-- 标题 -->
+                  <text x="600" y="50" font-family="Microsoft YaHei, sans-serif" font-size="32" font-weight="bold" text-anchor="middle" fill="#4169E1">淘工厂业务流程全景图</text>
+                  
+                  <!-- 节点样式定义 -->
+                  <defs>
+                    <!-- 工厂节点 -->
+                    <symbol id="factory" viewBox="0 0 100 100">
+                      <rect x="10" y="40" width="80" height="50" fill="#f0e6ff" stroke="#9370DB" stroke-width="2"/>
+                      <polygon points="10,40 50,10 90,40" fill="#f0e6ff" stroke="#9370DB" stroke-width="2"/>
+                      <rect x="30" y="60" width="15" height="30" fill="#ffffff" stroke="#9370DB" stroke-width="1"/>
+                      <rect x="55" y="60" width="15" height="30" fill="#ffffff" stroke="#9370DB" stroke-width="1"/>
+                    </symbol>
+                    
+                    <!-- 平台节点 -->
+                    <symbol id="platform" viewBox="0 0 100 100">
+                      <rect x="10" y="20" width="80" height="60" rx="10" ry="10" fill="#e6f0ff" stroke="#4169E1" stroke-width="2"/>
+                      <rect x="20" y="30" width="60" height="30" rx="5" ry="5" fill="#ffffff" stroke="#4169E1" stroke-width="1"/>
+                      <rect x="35" y="70" width="30" height="5" rx="2" ry="2" fill="#4169E1"/>
+                    </symbol>
+                    
+                    <!-- 消费者节点 -->
+                    <symbol id="consumer" viewBox="0 0 100 100">
+                      <circle cx="50" cy="35" r="20" fill="#ffe6e6" stroke="#FF6B6B" stroke-width="2"/>
+                      <path d="M30,95 L70,95 L65,55 L35,55 Z" fill="#ffe6e6" stroke="#FF6B6B" stroke-width="2"/>
+                    </symbol>
+                    
+                    <!-- 物流节点 -->
+                    <symbol id="logistics" viewBox="0 0 100 100">
+                      <rect x="10" y="30" width="80" height="40" fill="#e6ffe6" stroke="#4CAF50" stroke-width="2"/>
+                      <circle cx="30" cy="70" r="10" fill="#ffffff" stroke="#4CAF50" stroke-width="2"/>
+                      <circle cx="70" cy="70" r="10" fill="#ffffff" stroke="#4CAF50" stroke-width="2"/>
+                      <rect x="20" y="20" width="20" height="10" fill="#e6ffe6" stroke="#4CAF50" stroke-width="2"/>
+                    </symbol>
+                    
+                    <!-- 支付节点 -->
+                    <symbol id="payment" viewBox="0 0 100 100">
+                      <circle cx="50" cy="50" r="40" fill="#fff2e6" stroke="#FF9F43" stroke-width="2"/>
+                      <text x="50" y="45" font-family="Microsoft YaHei, sans-serif" font-size="40" text-anchor="middle" fill="#FF9F43">¥</text>
+                      <circle cx="50" cy="50" r="30" fill="none" stroke="#FF9F43" stroke-width="1" stroke-dasharray="5,3"/>
+                    </symbol>
+                    
+                    <!-- 箭头标记 -->
+                    <marker id="arrowhead-blue" markerWidth="10" markerHeight="7" refX="10" refY="3.5" orient="auto">
+                      <polygon points="0 0, 10 3.5, 0 7" fill="#4169E1"/>
+                    </marker>
+                    <marker id="arrowhead-purple" markerWidth="10" markerHeight="7" refX="10" refY="3.5" orient="auto">
+                      <polygon points="0 0, 10 3.5, 0 7" fill="#9370DB"/>
+                    </marker>
+                    <marker id="arrowhead-red" markerWidth="10" markerHeight="7" refX="10" refY="3.5" orient="auto">
+                      <polygon points="0 0, 10 3.5, 0 7" fill="#FF6B6B"/>
+                    </marker>
+                    <marker id="arrowhead-orange" markerWidth="10" markerHeight="7" refX="10" refY="3.5" orient="auto">
+                      <polygon points="0 0, 10 3.5, 0 7" fill="#FF9F43"/>
+                    </marker>
+                    <marker id="arrowhead-green" markerWidth="10" markerHeight="7" refX="10" refY="3.5" orient="auto">
+                      <polygon points="0 0, 10 3.5, 0 7" fill="#4CAF50"/>
+                    </marker>
+                    
+                    <!-- 流程号样式 -->
+                    <filter id="glow" x="-20%" y="-20%" width="140%" height="140%">
+                      <feGaussianBlur stdDeviation="2" result="blur"/>
+                      <feComposite in="SourceGraphic" in2="blur" operator="over"/>
+                    </filter>
+                  </defs>
+                  
+                  <!-- 主要节点 -->
+                  <g id="factory-node" class="node">
+                    <use href="#factory" x="150" y="200" width="100" height="100"/>
+                    <text x="200" y="320" font-family="Microsoft YaHei, sans-serif" font-size="18" font-weight="bold" text-anchor="middle" fill="#333333">工厂</text>
+                  </g>
+                  
+                  <g id="platform-node" class="node">
+                    <use href="#platform" x="550" y="200" width="100" height="100"/>
+                    <text x="600" y="320" font-family="Microsoft YaHei, sans-serif" font-size="18" font-weight="bold" text-anchor="middle" fill="#333333">淘工厂平台</text>
+                  </g>
+                  
+                  <g id="consumer-node" class="node">
+                    <use href="#consumer" x="950" y="200" width="100" height="100"/>
+                    <text x="1000" y="320" font-family="Microsoft YaHei, sans-serif" font-size="18" font-weight="bold" text-anchor="middle" fill="#333333">消费者</text>
+                  </g>
+                  
+                  <g id="logistics-node" class="node">
+                    <use href="#logistics" x="550" y="450" width="100" height="100"/>
+                    <text x="600" y="570" font-family="Microsoft YaHei, sans-serif" font-size="18" font-weight="bold" text-anchor="middle" fill="#333333">物流配送</text>
+                  </g>
+                  
+                  <g id="payment-node" class="node">
+                    <use href="#payment" x="550" y="650" width="100" height="100"/>
+                    <text x="600" y="770" font-family="Microsoft YaHei, sans-serif" font-size="18" font-weight="bold" text-anchor="middle" fill="#333333">支付系统</text>
+                  </g>
+                  
+                  <!-- 流程背景区域 -->
+                  <rect x="30" y="150" width="1140" height="350" fill="#f9f9f9" rx="20" ry="20" opacity="0.5"/>
+                  
+                  <!-- 连接线和流程 -->
+                  <!-- 工厂到平台 -->
+                  <path id="path-factory-to-platform" class="flow-path" d="M250,250 L550,250" stroke="#9370DB" stroke-width="3" fill="none" marker-end="url(#arrowhead-purple)" stroke-dasharray="0"/>
+                  <text id="text-factory-to-platform" for="path-factory-to-platform" x="400" y="230" font-family="Microsoft YaHei, sans-serif" font-size="16" font-weight="bold" text-anchor="middle" fill="#9370DB">1. 产品上架</text>
+                  <circle cx="400" cy="250" r="15" fill="#9370DB" opacity="0.8"/>
+                  <text x="400" y="255" font-family="Microsoft YaHei, sans-serif" font-size="12" font-weight="bold" text-anchor="middle" fill="white" filter="url(#glow)">1</text>
+                  
+                  <!-- 平台到消费者 -->
+                  <path id="path-platform-to-consumer" class="flow-path" d="M650,250 L950,250" stroke="#4169E1" stroke-width="3" fill="none" marker-end="url(#arrowhead-blue)" stroke-dasharray="0"/>
+                  <text id="text-platform-to-consumer" for="path-platform-to-consumer" x="800" y="230" font-family="Microsoft YaHei, sans-serif" font-size="16" font-weight="bold" text-anchor="middle" fill="#4169E1">2. 展示商品</text>
+                  <circle cx="800" cy="250" r="15" fill="#4169E1" opacity="0.8"/>
+                  <text x="800" y="255" font-family="Microsoft YaHei, sans-serif" font-size="12" font-weight="bold" text-anchor="middle" fill="white" filter="url(#glow)">2</text>
+                  
+                  <!-- 消费者到平台 -->
+                  <path id="path-consumer-to-platform" class="flow-path" d="M950,280 L650,280" stroke="#FF6B6B" stroke-width="3" fill="none" marker-end="url(#arrowhead-red)" stroke-dasharray="0"/>
+                  <text id="text-consumer-to-platform" for="path-consumer-to-platform" x="800" y="310" font-family="Microsoft YaHei, sans-serif" font-size="16" font-weight="bold" text-anchor="middle" fill="#FF6B6B">3. 下单购买</text>
+                  <circle cx="800" cy="280" r="15" fill="#FF6B6B" opacity="0.8"/>
+                  <text x="800" y="285" font-family="Microsoft YaHei, sans-serif" font-size="12" font-weight="bold" text-anchor="middle" fill="white" filter="url(#glow)">3</text>
+                  
+                  <!-- 平台到支付 -->
+                  <path id="path-platform-to-payment" class="flow-path" d="M600,300 L600,650" stroke="#FF9F43" stroke-width="3" fill="none" marker-end="url(#arrowhead-orange)" stroke-dasharray="5,3"/>
+                  <text id="text-platform-to-payment" for="path-platform-to-payment" x="520" y="475" font-family="Microsoft YaHei, sans-serif" font-size="16" font-weight="bold" text-anchor="middle" fill="#FF9F43">4. 支付处理</text>
+                  <circle cx="600" cy="475" r="15" fill="#FF9F43" opacity="0.8"/>
+                  <text x="600" y="480" font-family="Microsoft YaHei, sans-serif" font-size="12" font-weight="bold" text-anchor="middle" fill="white" filter="url(#glow)">4</text>
+                  
+                  <!-- 平台到工厂 -->
+                  <path id="path-platform-to-factory" class="flow-path" d="M550,280 L250,280" stroke="#4169E1" stroke-width="3" fill="none" marker-end="url(#arrowhead-blue)" stroke-dasharray="0"/>
+                  <text id="text-platform-to-factory" for="path-platform-to-factory" x="400" y="310" font-family="Microsoft YaHei, sans-serif" font-size="16" font-weight="bold" text-anchor="middle" fill="#4169E1">5. 订单通知</text>
+                  <circle cx="400" cy="280" r="15" fill="#4169E1" opacity="0.8"/>
+                  <text x="400" y="285" font-family="Microsoft YaHei, sans-serif" font-size="12" font-weight="bold" text-anchor="middle" fill="white" filter="url(#glow)">5</text>
+                  
+                  <!-- 工厂到物流 -->
+                  <path id="path-factory-to-logistics" class="flow-path" d="M200,300 L200,500 L550,500" stroke="#4CAF50" stroke-width="3" fill="none" marker-end="url(#arrowhead-green)" stroke-dasharray="0"/>
+                  <text id="text-factory-to-logistics" for="path-factory-to-logistics" x="350" y="480" font-family="Microsoft YaHei, sans-serif" font-size="16" font-weight="bold" text-anchor="middle" fill="#4CAF50">6. 发货</text>
+                  <circle cx="350" cy="500" r="15" fill="#4CAF50" opacity="0.8"/>
+                  <text x="350" y="505" font-family="Microsoft YaHei, sans-serif" font-size="12" font-weight="bold" text-anchor="middle" fill="white" filter="url(#glow)">6</text>
+                  
+                  <!-- 物流到消费者 -->
+                  <path id="path-logistics-to-consumer" class="flow-path" d="M650,500 L1000,500 L1000,300" stroke="#4CAF50" stroke-width="3" fill="none" marker-end="url(#arrowhead-green)" stroke-dasharray="0"/>
+                  <text id="text-logistics-to-consumer" for="path-logistics-to-consumer" x="850" y="480" font-family="Microsoft YaHei, sans-serif" font-size="16" font-weight="bold" text-anchor="middle" fill="#4CAF50">7. 配送到家</text>
+                  <circle cx="850" cy="500" r="15" fill="#4CAF50" opacity="0.8"/>
+                  <text x="850" y="505" font-family="Microsoft YaHei, sans-serif" font-size="12" font-weight="bold" text-anchor="middle" fill="white" filter="url(#glow)">7</text>
+                  
+                  <!-- 流程分阶段说明 -->
+                  <rect x="100" y="100" width="180" height="30" fill="#f0e6ff" rx="15" ry="15" opacity="0.8"/>
+                  <text x="190" y="122" font-family="Microsoft YaHei, sans-serif" font-size="16" font-weight="bold" text-anchor="middle" fill="#9370DB">商品上架阶段</text>
+                  
+                  <rect x="750" y="100" width="180" height="30" fill="#e6f0ff" rx="15" ry="15" opacity="0.8"/>
+                  <text x="840" y="122" font-family="Microsoft YaHei, sans-serif" font-size="16" font-weight="bold" text-anchor="middle" fill="#4169E1">交易阶段</text>
+                  
+                  <rect x="430" y="400" width="180" height="30" fill="#e6ffe6" rx="15" ry="15" opacity="0.8"/>
+                  <text x="520" y="422" font-family="Microsoft YaHei, sans-serif" font-size="16" font-weight="bold" text-anchor="middle" fill="#4CAF50">物流配送阶段</text>
+                  
+                  <!-- 佣金政策说明 -->
+                  <g id="commission-policy" class="info-box">
+                    <rect x="100" y="600" width="300" height="150" rx="10" ry="10" fill="#f8f9fa" stroke="#9370DB" stroke-width="2"/>
+                    <text x="250" y="630" font-family="Microsoft YaHei, sans-serif" font-size="18" font-weight="bold" text-anchor="middle" fill="#9370DB">佣金扶持政策</text>
+                    <text x="120" y="660" font-family="Microsoft YaHei, sans-serif" font-size="14" fill="#333333">• 冷启动阶段：仅收取0.6%固定佣金</text>
+                    <text x="120" y="690" font-family="Microsoft YaHei, sans-serif" font-size="14" fill="#333333">• 普通商品：享受类目佣金折扣，最高50%</text>
+                    <text x="120" y="720" font-family="Microsoft YaHei, sans-serif" font-size="14" fill="#333333">• 相比传统11%佣金，优惠幅度最高95%</text>
+                  </g>
+                  
+                  <!-- M2C模式说明 -->
+                  <g id="m2c-benefits" class="info-box">
+                    <rect x="800" y="600" width="300" height="150" rx="10" ry="10" fill="#f8f9fa" stroke="#4169E1" stroke-width="2"/>
+                    <text x="950" y="630" font-family="Microsoft YaHei, sans-serif" font-size="18" font-weight="bold" text-anchor="middle" fill="#4169E1">M2C模式优势</text>
+                    <text x="820" y="660" font-family="Microsoft YaHei, sans-serif" font-size="14" fill="#333333">• 减少中间环节，降低成本</text>
+                    <text x="820" y="690" font-family="Microsoft YaHei, sans-serif" font-size="14" fill="#333333">• 工厂直连消费者，提高效率</text>
+                    <text x="820" y="720" font-family="Microsoft YaHei, sans-serif" font-size="14" fill="#333333">• 消费者获得更优惠的价格</text>
+                  </g>
+                </svg>
+                `;
+                
+                // 获取SVG文档
+                const svgDoc = svgContainer.querySelector('svg');
+                if (!svgDoc) {
+                    throw new Error('SVG元素未找到');
+                }
+                
+                svgDoc.style.width = '100%';
+                svgDoc.style.height = 'auto';
+                svgDoc.style.maxWidth = '1200px';
+                svgDoc.style.transition = 'all 0.3s ease';
+                svgDoc.style.margin = '0 auto';
+                svgDoc.style.display = 'block';
+                
+                // 为各个节点添加交互效果
+                addNodeInteractivity(svgDoc, 'factory', '工厂', '负责生产和发货商品，是整个流程的起点。工厂通过淘工厂平台直接面向消费者，减少中间环节。', {
+                    title: '工厂优势',
+                    content: '通过淘工厂平台，工厂可以享受低佣金政策，冷启动阶段仅收取0.6%固定佣金，相比传统电商平台11%左右的佣金，优惠幅度最高可达95%。',
+                    buttonText: '了解佣金政策'
+                });
+                
+                addNodeInteractivity(svgDoc, 'platform', '淘工厂平台', '连接工厂与消费者的核心平台，提供商品展示、交易撮合、支付处理等服务。', {
+                    title: '平台特点',
+                    content: '淘工厂采用M2C（Manufacturer-to-Consumer）模式，直接对接工厂和消费者，减少中间环节，降低成本，提高效率。平台提供全流程服务，包括商品展示、订单处理、支付和物流对接。',
+                    buttonText: '了解M2C模式'
+                });
+                
+                addNodeInteractivity(svgDoc, 'consumer', '消费者', '淘工厂的终端用户，可以直接从工厂购买优质低价的商品。', {
+                    title: '消费者获益',
+                    content: '通过淘工厂平台，消费者可以获得更优惠的价格，因为减少了中间环节的加价。同时，直接从工厂购买也保证了商品的质量和正品保障。',
+                    buttonText: '查看商品示例'
+                });
+                
+                addNodeInteractivity(svgDoc, 'logistics', '物流配送', '负责将商品从工厂配送到消费者手中，是整个流程的重要环节。', {
+                    title: '物流系统',
+                    content: '淘工厂与多家物流公司合作，提供快速、可靠的配送服务。系统会自动选择最优的物流方案，确保商品及时送达消费者手中。',
+                    buttonText: '查看物流详情'
+                });
+                
+                addNodeInteractivity(svgDoc, 'payment', '支付系统', '处理消费者的支付请求，确保交易安全和资金流转。', {
+                    title: '支付保障',
+                    content: '淘工厂提供安全、便捷的支付系统，支持多种支付方式。同时，平台实行担保交易，只有消费者确认收货后，货款才会转给工厂，保障双方权益。',
+                    buttonText: '了解支付流程'
+                });
+                
+                // 为流程路径添加交互效果和动画
+                addPathInteractivity(svgDoc);
+                
+                // 设置流程动画控制
+                setupFlowAnimation(svgDoc);
+                
+                // 隐藏错误信息
+                if (svgError) {
+                    svgError.style.display = 'none';
+                }
+            } catch (error) {
+                console.error('SVG加载失败:', error);
+                if (svgError) {
+                    svgError.style.display = 'block';
+                    svgError.textContent = `图表加载失败: ${error.message}`;
+                }
+                svgContainer.innerHTML = '';
+            }
+        }
+        
+        // 获取节点描述
+        function getNodeDescription(nodeType) {
+            const descriptions = {
+                factory: '生产制造中心，负责产品生产和质量控制',
+                platform: '电商平台，提供在线交易和服务支持',
+                consumer: '终端消费者，享受优质产品和服务',
+                logistics: '物流配送中心，确保快速准确配送',
+                payment: '支付系统，提供安全便捷的支付服务'
+            };
+            return descriptions[nodeType] || '暂无描述';
+        }
+        
+        // 显示节点详情
+        function showNodeDetails(nodeType, nodeTitle) {
+            const details = {
+                factory: {
+                    title: '工厂节点详情',
+                    content: `
+                        <h3>${nodeTitle}</h3>
+                        <ul>
+                            <li>生产能力：日均5000件</li>
+                            <li>质检标准：ISO9001认证</li>
+                            <li>工人数量：200+</li>
+                            <li>设备自动化率：85%</li>
+                        </ul>
+                    `
+                },
+                platform: {
+                    title: '平台节点详情',
+                    content: `
+                        <h3>${nodeTitle}</h3>
+                        <ul>
+                            <li>日均订单：10000+</li>
+                            <li>商家数量：500+</li>
+                            <li>用户满意度：98%</li>
+                            <li>平台佣金：5%</li>
+                        </ul>
+                    `
+                },
+                consumer: {
+                    title: '消费者节点详情',
+                    content: `
+                        <h3>${nodeTitle}</h3>
+                        <ul>
+                            <li>月均消费：￥1000+</li>
+                            <li>复购率：65%</li>
+                            <li>好评率：95%</li>
+                            <li>会员权益：专享折扣</li>
+                        </ul>
+                    `
+                },
+                logistics: {
+                    title: '物流节点详情',
+                    content: `
+                        <h3>${nodeTitle}</h3>
+                        <ul>
+                            <li>配送范围：全国</li>
+                            <li>时效：24-48小时</li>
+                            <li>准时率：99%</li>
+                            <li>损坏率：<0.1%</li>
+                        </ul>
+                    `
+                },
+                payment: {
+                    title: '支付节点详情',
+                    content: `
+                        <h3>${nodeTitle}</h3>
+                        <ul>
+                            <li>支付方式：多样化</li>
+                            <li>交易安全：SSL加密</li>
+                            <li>处理速度：秒级</li>
+                            <li>退款时效：72小时内</li>
+                        </ul>
+                    `
+                }
+            };
+            
+            const detail = details[nodeType];
+            if (detail && nodeDetails) {
+                nodeDetails.innerHTML = detail.content;
+                nodeDetails.style.display = 'block';
+            }
+        }
+        
+        // 关闭详情面板
+        function setupCloseDetailsHandler() {
+            const closeDetails = document.querySelector('.close-details');
+            if (closeDetails) {
+                closeDetails.addEventListener('click', function() {
+                    const nodeDetails = document.getElementById('node-details');
+                    if (nodeDetails) {
+                        nodeDetails.style.display = 'none';
+                        // 移除所有节点的活跃状态
+                        const activeNodes = document.querySelectorAll('.node-active');
+                        activeNodes.forEach(node => node.classList.remove('node-active'));
+                    }
+                });
+            }
+        }
+        
+        // 为节点添加交互效果
+        function addNodeInteractivity(svgDoc, nodeId, title, description, details) {
+            // 查找function节点
+            const nodeUses = svgDoc.querySelectorAll(`use[href="#${nodeId}"]`);
+            const tooltip = document.getElementById('tooltip');
+            const nodeDetails = document.getElementById('node-details');
+            
+            nodeUses.forEach(node => {
+                // 鼠标悬停效果
+                node.addEventListener('mouseover', function(e) {
+                    // 高亮节点
+                    this.classList.add('node-highlight');
+                    
+                    // 显示提示框
+                    tooltip.innerHTML = `<strong>${title}</strong><br>${description}`;
+                    tooltip.style.display = 'block';
+                    
+                    // 计算提示框位置
+                    const rect = this.getBoundingClientRect();
+                    const containerRect = svgDoc.getBoundingClientRect();
+                    
+                    tooltip.style.left = (rect.left + rect.width/2 - containerRect.left - tooltip.offsetWidth/2 + window.scrollX) + 'px';
+                    tooltip.style.top = (rect.top - containerRect.top - tooltip.offsetHeight - 10 + window.scrollY) + 'px';
+                });
+                
+                node.addEventListener('mouseout', function() {
+                    // 移除高亮
+                    this.classList.remove('node-highlight');
+                    
+                    // 隐藏提示框
+                    tooltip.style.display = 'none';
+                });
+                
+                // 点击显示详情
+                node.addEventListener('click', function(e) {
+                    // 移除所有节点的活跃状态
+                    const activeNodes = svgDoc.querySelectorAll('.node-active');
+                    activeNodes.forEach(n => n.classList.remove('node-active'));
+                    
+                    // 添加当前节点的活跃状态
+                    this.classList.add('node-active');
+                    
+                    // 显示详情面板
+                    if (nodeDetails && details) {
+                        try {
+                            nodeDetails.innerHTML = `
+                                <div class="node-details-content">
+                                    <span class="close-details">&times;</span>
+                                    <h3>${details.title || '节点详情'}</h3>
+                                    <div class="content">${details.content || ''}</div>
+                                    <div class="detail-actions">
+                                        <button class="detail-btn">${details.buttonText || '了解更多'}</button>
+                                    </div>
+                                </div>
+                            `;
+                            nodeDetails.style.display = 'block';
+                            setupCloseDetailsHandler();
+                            
+                            // 详情按钮点击事件
+                            try {
+                                const detailBtn = nodeDetails.querySelector('.detail-btn');
+                                if (detailBtn) {
+                                    detailBtn.onclick = function() {
+                                        // 根据不同节点执行不同操作
+                                        if (nodeId === 'factory' || nodeId === 'platform') {
+                                            const policyContainer = document.querySelector('.policy-container');
+                                            if (policyContainer) {
+                                                policyContainer.scrollIntoView({ behavior: 'smooth' });
+                                            }
+                                        } else if (nodeId === 'consumer') {
+                                            const appScreenshot = document.querySelector('.app-screenshot');
+                                            if (appScreenshot) {
+                                                appScreenshot.scrollIntoView({ behavior: 'smooth' });
+                                            }
+                                        }
+                                    };
+                                }
+                            } catch (error) {
+                                console.error('设置详情按钮事件失败:', error);
+                            }
+                        } catch (error) {
+                            console.error('更新节点详情面板失败:', error);
+                        }
+                    }
+                    
+                    // 设置详情面板位置
+                    const rect = this.getBoundingClientRect();
+                    const containerRect = svgDoc.getBoundingClientRect();
+                    
+                    let leftPos = rect.left + rect.width/2 - containerRect.left - nodeDetails.offsetWidth/2 + window.scrollX;
+                    let topPos = rect.bottom - containerRect.top + 20 + window.scrollY;
+                    
+                    // 确保详情面板不超出容器边界
+                    if (leftPos < 0) leftPos = 10;
+                    if (leftPos + nodeDetails.offsetWidth > containerRect.width) {
+                        leftPos = containerRect.width - nodeDetails.offsetWidth - 10;
+                    }
+                    
+                    nodeDetails.style.left = leftPos + 'px';
+                    nodeDetails.style.top = topPos + 'px';
+                    nodeDetails.style.display = 'block';
+                    
+                    // 设置关闭详情按钮点击事件
+                    const closeBtn = nodeDetails.querySelector('.close-details');
+                    if (closeBtn) {
+                        closeBtn.onclick = function() {
+                            // 关闭详情面板
+                            nodeDetails.style.display = 'none';
+                            // 移除节点活跃状态
+                            node.classList.remove('node-active');
+                        };
+                    }
+                });
+            });
+        }
+        
+        // 为流程路径添加交互效果
+        function addPathInteractivity(svgDoc) {
+            // 查找所有路径
+            const paths = svgDoc.querySelectorAll('path');
+            
+            paths.forEach(path => {
+                // 添加动画效果
+                if (path.getAttribute('marker-end') === 'url(#arrowhead)') {
+                    path.classList.add('path-animation');
+                }
+                
+                // 鼠标悬停效果
+                path.addEventListener('mouseover', function() {
+                    this.classList.add('path-highlight');
+                    
+                    // 获取路径旁边的文本
+                    const pathId = this.getAttribute('id');
+                    if (pathId) {
+                        const relatedText = svgDoc.querySelector(`text[for="${pathId}"]`);
+                        if (relatedText) {
+                            relatedText.style.fontWeight = 'bold';
+                            relatedText.style.fill = '#4169E1';
+                        }
+                    }
+                });
+                
+                path.addEventListener('mouseout', function() {
+                    this.classList.remove('path-highlight');
+                    
+                    // 恢复文本样式
+                    const pathId = this.getAttribute('id');
+                    if (pathId) {
+                        const relatedText = svgDoc.querySelector(`text[for="${pathId}"]`);
+                        if (relatedText) {
+                            relatedText.style.fontWeight = 'normal';
+                            relatedText.style.fill = '#666666';
+                        }
+                    }
+                });
+            });
+        }
+        
+        // 政策卡片点击效果
+        const policyCards = document.querySelectorAll('.policy-card');
+        policyCards.forEach(card => {
+            card.addEventListener('click', function() {
+                // 移除其他卡片的活跃状态
+                policyCards.forEach(c => c.classList.remove('active'));
+                
+                // 添加当前卡片的活跃状态
+                this.classList.add('active');
+                this.style.backgroundColor = '#f0e6ff';
+                
+                // 添加点击动画
+                this.style.transform = 'scale(0.95)';
+                setTimeout(() => {
+                    this.style.transform = 'translateY(-5px)';
+                    this.style.transition = 'transform 0.3s ease';
+                }, 300);
+            });
+        });
+        
+        // 图片模态框功能
+        const appScreenshot = document.getElementById('appScreenshot');
+        const imageModal = document.getElementById('imageModal');
+        const modalImage = document.getElementById('modalImage');
+        const closeModal = document.getElementById('closeModal');
+        
+        if(appScreenshot && imageModal && modalImage) {
+            appScreenshot.addEventListener('click', function() {
+                const imgSrc = this.querySelector('img').src;
+                modalImage.src = imgSrc;
+                imageModal.classList.add('active');
+            });
+            
+            closeModal.addEventListener('click', function() {
+                imageModal.classList.remove('active');
+            });
+            
+            imageModal.addEventListener('click', function(e) {
+                if(e.target === this) {
+                    imageModal.classList.remove('active');
+                }
+            });
+        }
+    </script>
