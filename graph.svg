@@ -1,0 +1,113 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="800" viewBox="0 0 1200 800">
+  <!-- 背景 -->
+  <rect width="100%" height="100%" fill="#ffffff"/>
+  
+  <!-- 标题 -->
+  <text x="600" y="50" font-family="Microsoft YaHei, sans-serif" font-size="32" font-weight="bold" text-anchor="middle" fill="#4169E1">淘工厂业务流程全景图</text>
+  
+  <!-- 节点样式定义 -->
+  <defs>
+    <!-- 工厂节点 -->
+    <symbol id="factory" viewBox="0 0 100 100">
+      <rect x="10" y="40" width="80" height="50" fill="#f0e6ff" stroke="#9370DB" stroke-width="2"/>
+      <polygon points="10,40 50,10 90,40" fill="#f0e6ff" stroke="#9370DB" stroke-width="2"/>
+      <rect x="30" y="60" width="15" height="30" fill="#ffffff" stroke="#9370DB" stroke-width="1"/>
+      <rect x="55" y="60" width="15" height="30" fill="#ffffff" stroke="#9370DB" stroke-width="1"/>
+    </symbol>
+    
+    <!-- 平台节点 -->
+    <symbol id="platform" viewBox="0 0 100 100">
+      <rect x="10" y="20" width="80" height="60" rx="10" ry="10" fill="#e6f0ff" stroke="#4169E1" stroke-width="2"/>
+      <rect x="20" y="30" width="60" height="30" rx="5" ry="5" fill="#ffffff" stroke="#4169E1" stroke-width="1"/>
+      <rect x="35" y="70" width="30" height="5" rx="2" ry="2" fill="#4169E1"/>
+    </symbol>
+    
+    <!-- 消费者节点 -->
+    <symbol id="consumer" viewBox="0 0 100 100">
+      <circle cx="50" cy="35" r="20" fill="#ffe6e6" stroke="#FF6B6B" stroke-width="2"/>
+      <path d="M30,95 L70,95 L65,55 L35,55 Z" fill="#ffe6e6" stroke="#FF6B6B" stroke-width="2"/>
+    </symbol>
+    
+    <!-- 物流节点 -->
+    <symbol id="logistics" viewBox="0 0 100 100">
+      <rect x="10" y="30" width="80" height="40" fill="#e6ffe6" stroke="#4CAF50" stroke-width="2"/>
+      <circle cx="30" cy="70" r="10" fill="#ffffff" stroke="#4CAF50" stroke-width="2"/>
+      <circle cx="70" cy="70" r="10" fill="#ffffff" stroke="#4CAF50" stroke-width="2"/>
+      <rect x="20" y="20" width="20" height="10" fill="#e6ffe6" stroke="#4CAF50" stroke-width="2"/>
+    </symbol>
+    
+    <!-- 支付节点 -->
+    <symbol id="payment" viewBox="0 0 100 100">
+      <circle cx="50" cy="50" r="40" fill="#fff2e6" stroke="#FF9F43" stroke-width="2"/>
+      <text x="50" y="45" font-family="Microsoft YaHei, sans-serif" font-size="40" text-anchor="middle" fill="#FF9F43">¥</text>
+      <circle cx="50" cy="50" r="30" fill="none" stroke="#FF9F43" stroke-width="1" stroke-dasharray="5,3"/>
+    </symbol>
+  </defs>
+  
+  <!-- 主要节点 -->
+  <use href="#factory" x="150" y="200" width="100" height="100"/>
+  <text x="200" y="320" font-family="Microsoft YaHei, sans-serif" font-size="18" text-anchor="middle" fill="#333333">工厂</text>
+  
+  <use href="#platform" x="550" y="200" width="100" height="100"/>
+  <text x="600" y="320" font-family="Microsoft YaHei, sans-serif" font-size="18" text-anchor="middle" fill="#333333">淘工厂平台</text>
+  
+  <use href="#consumer" x="950" y="200" width="100" height="100"/>
+  <text x="1000" y="320" font-family="Microsoft YaHei, sans-serif" font-size="18" text-anchor="middle" fill="#333333">消费者</text>
+  
+  <use href="#logistics" x="550" y="450" width="100" height="100"/>
+  <text x="600" y="570" font-family="Microsoft YaHei, sans-serif" font-size="18" text-anchor="middle" fill="#333333">物流配送</text>
+  
+  <use href="#payment" x="550" y="650" width="100" height="100"/>
+  <text x="600" y="770" font-family="Microsoft YaHei, sans-serif" font-size="18" text-anchor="middle" fill="#333333">支付系统</text>
+  
+  <!-- 连接线和流程 -->
+  <!-- 工厂到平台 -->
+  <path d="M250,250 L550,250" stroke="#9370DB" stroke-width="3" fill="none" marker-end="url(#arrowhead)"/>
+  <text x="400" y="230" font-family="Microsoft YaHei, sans-serif" font-size="16" text-anchor="middle" fill="#666666">1. 产品上架</text>
+  
+  <!-- 平台到消费者 -->
+  <path d="M650,250 L950,250" stroke="#4169E1" stroke-width="3" fill="none" marker-end="url(#arrowhead)"/>
+  <text x="800" y="230" font-family="Microsoft YaHei, sans-serif" font-size="16" text-anchor="middle" fill="#666666">2. 展示商品</text>
+  
+  <!-- 消费者到平台 -->
+  <path d="M950,280 L650,280" stroke="#FF6B6B" stroke-width="3" fill="none" marker-end="url(#arrowhead)"/>
+  <text x="800" y="310" font-family="Microsoft YaHei, sans-serif" font-size="16" text-anchor="middle" fill="#666666">3. 下单购买</text>
+  
+  <!-- 平台到支付 -->
+  <path d="M600,300 L600,650" stroke="#FF9F43" stroke-width="3" fill="none" stroke-dasharray="10,5" marker-end="url(#arrowhead)"/>
+  <text x="520" y="475" font-family="Microsoft YaHei, sans-serif" font-size="16" text-anchor="middle" fill="#666666">4. 支付处理</text>
+  
+  <!-- 平台到工厂 -->
+  <path d="M550,280 L250,280" stroke="#4169E1" stroke-width="3" fill="none" marker-end="url(#arrowhead)"/>
+  <text x="400" y="310" font-family="Microsoft YaHei, sans-serif" font-size="16" text-anchor="middle" fill="#666666">5. 订单通知</text>
+  
+  <!-- 工厂到物流 -->
+  <path d="M200,300 L200,500 L550,500" stroke="#4CAF50" stroke-width="3" fill="none" marker-end="url(#arrowhead)"/>
+  <text x="350" y="480" font-family="Microsoft YaHei, sans-serif" font-size="16" text-anchor="middle" fill="#666666">6. 发货</text>
+  
+  <!-- 物流到消费者 -->
+  <path d="M650,500 L1000,500 L1000,300" stroke="#4CAF50" stroke-width="3" fill="none" marker-end="url(#arrowhead)"/>
+  <text x="850" y="480" font-family="Microsoft YaHei, sans-serif" font-size="16" text-anchor="middle" fill="#666666">7. 配送到家</text>
+  
+  <!-- 箭头标记 -->
+  <defs>
+    <marker id="arrowhead" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
+      <polygon points="0 0, 10 3.5, 0 7" fill="#333"/>
+    </marker>
+  </defs>
+  
+  <!-- 佣金政策说明 -->
+  <rect x="100" y="600" width="300" height="150" rx="10" ry="10" fill="#f8f9fa" stroke="#ddd" stroke-width="1"/>
+  <text x="250" y="630" font-family="Microsoft YaHei, sans-serif" font-size="18" font-weight="bold" text-anchor="middle" fill="#4169E1">佣金扶持政策</text>
+  <text x="120" y="660" font-family="Microsoft YaHei, sans-serif" font-size="14" fill="#333333">• 冷启动阶段：仅收取0.6%固定佣金</text>
+  <text x="120" y="690" font-family="Microsoft YaHei, sans-serif" font-size="14" fill="#333333">• 普通商品：享受类目佣金折扣，最高50%</text>
+  <text x="120" y="720" font-family="Microsoft YaHei, sans-serif" font-size="14" fill="#333333">• 相比传统11%佣金，优惠幅度最高95%</text>
+  
+  <!-- M2C模式说明 -->
+  <rect x="800" y="600" width="300" height="150" rx="10" ry="10" fill="#f8f9fa" stroke="#ddd" stroke-width="1"/>
+  <text x="950" y="630" font-family="Microsoft YaHei, sans-serif" font-size="18" font-weight="bold" text-anchor="middle" fill="#4169E1">M2C模式优势</text>
+  <text x="820" y="660" font-family="Microsoft YaHei, sans-serif" font-size="14" fill="#333333">• 减少中间环节，降低成本</text>
+  <text x="820" y="690" font-family="Microsoft YaHei, sans-serif" font-size="14" fill="#333333">• 工厂直连消费者，提高效率</text>
+  <text x="820" y="720" font-family="Microsoft YaHei, sans-serif" font-size="14" fill="#333333">• 消费者获得更优惠的价格</text>
+</svg>
